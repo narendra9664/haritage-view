@@ -361,6 +361,50 @@
             cursor: pointer;
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .nav-links {
@@ -430,9 +474,8 @@
                         <div class="feature">Instant PDF download</div>
                     </div>
                     
-                    <a href="downloads/chittorgarh-guide.pdf" class="buy-button" download>
-                        Download Your Guide Now 
-                    </a>
+                    <!-- Form with user information fields -->
+                    <button id="initiateDownload" class="buy-button">Download Guide</button>
                 </div>
             </section>
 
@@ -466,6 +509,35 @@
             </section>
         </div>
     </main>
+
+    <!-- Add this before </body> -->
+<div id="userInfoModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3 style="margin-bottom: 1.5rem; color: #4c51bf;">Enter Your Details to Download</h3>
+        <form id="userDetailsForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label for="userFirstName" style="display: block; margin-bottom: 0.5rem; color: #4a5568;">First Name *</label>
+                    <input type="text" id="userFirstName" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                </div>
+                <div>
+                    <label for="userLastName" style="display: block; margin-bottom: 0.5rem; color: #4a5568;">Last Name *</label>
+                    <input type="text" id="userLastName" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label for="userEmail" style="display: block; margin-bottom: 0.5rem; color: #4a5568;">Email Address *</label>
+                <input type="email" id="userEmail" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label for="userPhone" style="display: block; margin-bottom: 0.5rem; color: #4a5568;">Phone Number *</label>
+                <input type="tel" id="userPhone" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+            </div>
+            <button type="submit" class="buy-button" style="width: 100%;">Download Now</button>
+        </form>
+    </div>
+</div>
 
     <script>
         // Smooth scrolling for navigation links
@@ -502,9 +574,207 @@
             this.reset();
         });
 
-        // Buy button click
-        document.querySelector('.buy-button').addEventListener('click', function() {
-            alert('Redirecting to secure checkout... (This would integrate with your payment processor)');
+
+
+        // Handle user details form submission for PDF download
+        document.getElementById('initiateDownload').addEventListener('click', function() {
+            const firstName = document.getElementById('userFirstName').value;
+            const lastName = document.getElementById('userLastName').value;
+            const email = document.getElementById('userEmail').value;
+            const phone = document.getElementById('userPhone').value;
+            
+            if (!firstName || !lastName || !email || !phone) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            // Show loading state
+            const button = document.getElementById('initiateDownload');
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Processing Download...';
+            button.disabled = true;
+            
+            // Collect user data
+            const userData = {
+                name: firstName + ' ' + lastName,
+                email: email,
+                phone: phone,
+                timestamp: new Date().toISOString(),
+                source: 'pdf_download'
+            };
+            
+            console.log('User data collected for download:', userData);
+            
+            // Send user data to server API
+            fetch('/api/collect-user-data', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(userData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error || 'Server error'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Show download section
+                    document.getElementById('userFormSection').style.display = 'none';
+                    document.getElementById('downloadSection').style.display = 'block';
+                    
+                    // Trigger automatic download after a short delay
+                    setTimeout(function() {
+                        const link = document.createElement('a');
+                        link.href = data.downloadUrl || '/downloads/chittorgarh-guide.pdf';
+                        link.download = 'chittorgarh-guide.pdf';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }, 1000); // Wait 1 second before auto-download
+                } else {
+                    throw new Error(data.message || 'Failed to process your request');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error processing your request. Please try again.');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('userInfoModal');
+        const closeModalBtn = document.querySelector('.close-modal');
+
+        document.getElementById('initiateDownload').addEventListener('click', function() {
+            modal.style.display = 'flex';
+        });
+
+        closeModalBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // User details form submission
+        document.getElementById('userDetailsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const firstName = document.getElementById('userFirstName').value;
+            const lastName = document.getElementById('userLastName').value;
+            const email = document.getElementById('userEmail').value;
+            const phone = document.getElementById('userPhone').value;
+
+            // Basic validation
+            if (!firstName || !lastName || !email || !phone) {
+                alert('Please fill in all fields marked with *');
+                return;
+            }
+
+            // Show loading state
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Processing...';
+            button.disabled = true;
+
+            // Collect user data
+            const userData = {
+                name: `${firstName} ${lastName}`,
+                email: email,
+                phone: phone,
+                timestamp: new Date().toISOString(),
+                source: 'pdf_download'
+            };
+
+            console.log('User data for download:', userData);
+
+            // Send data to server (mocked API call)
+            setTimeout(() => {
+                // Hide modal
+                modal.style.display = 'none';
+
+                // Show success message (you can replace this with your download logic)
+                alert('Thank you! Your download will start shortly.');
+
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 2000);
+        });
+
+        document.getElementById('initiateDownload').addEventListener('click', function() {
+            document.getElementById('userInfoModal').style.display = 'flex';
+        });
+
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            document.getElementById('userInfoModal').style.display = 'none';
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target == document.getElementById('userInfoModal')) {
+                document.getElementById('userInfoModal').style.display = 'none';
+            }
+        });
+
+        document.getElementById('userDetailsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userData = {
+                name: document.getElementById('userFirstName').value + ' ' + document.getElementById('userLastName').value,
+                email: document.getElementById('userEmail').value,
+                phone: document.getElementById('userPhone').value,
+                timestamp: new Date().toISOString(),
+                source: 'pdf_download'
+            };
+            
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = 'Processing...';
+            submitButton.disabled = true;
+
+            // Send user data to server
+            fetch('/api/collect-user-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal
+                    document.getElementById('userInfoModal').style.display = 'none';
+                    
+                    // Trigger download
+                    const link = document.createElement('a');
+                    link.href = data.downloadUrl || '/downloads/chittorgarh-guide.pdf';
+                    link.download = 'chittorgarh-guide.pdf';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Reset form
+                    this.reset();
+                } else {
+                    throw new Error(data.message || 'Download failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error processing your download. Please try again.');
+            })
+            .finally(() => {
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            });
         });
     </script>
 </body>
