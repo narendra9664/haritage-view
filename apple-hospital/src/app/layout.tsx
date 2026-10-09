@@ -20,6 +20,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
   },
+  // Pitch preview: keep search engines away until the hospital approves the
+  // site and the placeholder details are replaced. Delete this to go live.
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {

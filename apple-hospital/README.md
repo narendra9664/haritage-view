@@ -45,3 +45,4 @@ These are placeholders or unverified claims. Confirm each one with the hospital:
 - [ ] **Logo.** The apple mark is a stand-in for the hospital's own logo.
 - [ ] **"See All Services" and "View All Treatments"** jump to the contact section until dedicated pages exist.
 - [ ] Have the copy checked against Indian rules on medical advertising and fertility clinics.
+- [ ] **Search indexing.** The site is hidden from search engines while it's a pitch preview. Remove `robots` from `src/app/layout.tsx` to go live.
