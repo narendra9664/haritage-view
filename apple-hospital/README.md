@@ -17,7 +17,9 @@ npm run build    # production build (also type-checks)
 npm run lint
 ```
 
-To deploy on Vercel, import the repository and set **Root Directory** to `apple-hospital`.
+The build is a static export: `npm run build` writes plain HTML to `out/`, which any static host can serve.
+
+**Netlify:** import the repository, set **Base directory** to `apple-hospital`, and deploy. `netlify.toml` supplies the build command and the `out` publish folder.
 
 ## Where things live
 

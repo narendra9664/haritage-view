@@ -1,0 +1,10 @@
+# Read from this folder when the Netlify project's Base directory is
+# "apple-hospital". Settings here override the ones in the Netlify UI.
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Static export: serve out/ as-is instead of running the Next.js adapter.
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
