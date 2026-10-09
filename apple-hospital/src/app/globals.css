@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand palette */
+  --color-forest: #0a3a2a;
+  --color-forest-deep: #072c20;
+  --color-accent: #00d2b4;
+  /* #00d2b4 is too light for text on white, so text highlights use deeper
+     shades of the same teal: -ink passes for large headings, -deep for body. */
+  --color-accent-ink: #00a38c;
+  --color-accent-deep: #007f6d;
+  --color-mint: #e6faf5;
+  --color-mist: #f9fafb;
+  --color-ink: #0f1f1a;
+  --color-muted: #52625c;
+
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-float-slow: float 13s ease-in-out infinite;
+  /* Hero entrance runs in CSS so the headline paints before JavaScript loads. */
+  /* `backwards` hides elements during their delay, then lets the animation
+     drop off entirely once finished instead of pinning its end state. */
+  --animate-fade-up: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-16px);
+    }
+  }
+}
+
+@utility bg-dots {
+  background-image: radial-gradient(rgb(0 210 180 / 0.25) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+/* Keep anchored sections clear of the sticky navbar. */
+section[id],
+footer[id] {
+  scroll-margin-top: 4.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-float,
+  .animate-float-slow,
+  .animate-fade-up {
+    animation: none;
+  }
+}
